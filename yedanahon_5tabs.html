@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ידע נכון — לימוד ניקוד</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Rubik:wght@400;500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gn:#27AE60;--rd:#E74C3C;--mid:#5D6D7E;--dark:#2C3E50;--cream:#FFF9F0;
+  --r:14px;--rl:22px;--sh:0 4px 20px rgba(0,0,0,.1);--sh2:0 8px 30px rgba(0,0,0,.16);
+}
+body{font-family:'Rubik',sans-serif;background:var(--cream);min-height:100vh;direction:rtl;}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* ── TABS ── */
+.tabs-bar{display:flex;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.12);position:sticky;top:0;z-index:100;overflow-x:auto;}
+.tab-btn{flex:1;min-width:60px;padding:10px 4px 8px;border:none;background:transparent;cursor:pointer;font-family:'Rubik',sans-serif;font-size:11px;font-weight:700;color:var(--mid);transition:all .2s;border-bottom:3px solid transparent;display:flex;flex-direction:column;align-items:center;gap:3px;white-space:nowrap;}
+.tab-btn .ticon{font-size:18px;}
+.tab-btn .tlabel{font-size:9.5px;line-height:1.3;text-align:center;}
+.tab-btn.active{border-bottom-color:var(--act);color:var(--act);background:color-mix(in srgb, var(--act) 8%, white);}
+.tab-panel{display:none;flex:1;flex-direction:column;min-height:calc(100vh - 56px);}
+.tab-panel.active{display:flex;}
+
+/* ── HOME ── */
+.home-wrap{flex:1;overflow-y:auto;padding-bottom:24px;}
+.home-top{padding:16px 14px 10px;}
+.tab-hero{border-radius:18px;padding:18px 16px;margin-bottom:12px;color:#fff;position:relative;overflow:hidden;}
+.tab-hero h1{font-family:'Fredoka One',cursive;font-size:28px;margin-bottom:3px;}
+.tab-hero p{font-size:12px;opacity:.9;}
+.hero-nikud{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:'Times New Roman',serif;font-size:72px;opacity:.17;color:#fff;pointer-events:none;}
+.nik-chips{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;}
+.nik-chip{border-radius:40px;padding:5px 13px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px;}
+.nik-char{font-family:'Times New Roman',serif;font-size:19px;}
+.score-bar{display:flex;justify-content:center;gap:18px;background:#fff;border-radius:40px;padding:9px 18px;box-shadow:var(--sh);}
+.sb-item{text-align:center;}
+.sb-val{font-family:'Fredoka One',cursive;font-size:20px;}
+.sb-lbl{font-size:9.5px;color:var(--mid);}
+.games-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:12px 12px 0;}
+.gc{background:#fff;border-radius:var(--rl);padding:12px 7px;text-align:center;cursor:pointer;box-shadow:var(--sh);transition:all .18s;border:2.5px solid transparent;position:relative;}
+.gc:hover{transform:translateY(-3px) scale(1.03);box-shadow:var(--sh2);}
+.gc:active{transform:scale(.97);}
+.gc .ico{font-size:24px;display:block;margin-bottom:4px;}
+.gc .nm{font-size:9.5px;font-weight:700;color:var(--dark);line-height:1.2;}
+.gc .lv{font-size:8.5px;color:var(--mid);margin-top:2px;}
+.gc .st{font-size:9px;margin-top:3px;}
+.gc.dobble{border-width:3px!important;background:linear-gradient(135deg,#FFF9CC,#FFFBEE)!important;}
+.dbadge{position:absolute;top:-6px;right:-6px;background:#FFD93D;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;box-shadow:0 2px 5px rgba(0,0,0,.2);}
+
+/* ── GAME ── */
+.ghead{color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.18);}
+.back{background:rgba(255,255,255,.25);border:none;border-radius:10px;padding:6px 12px;color:#fff;font-size:12px;cursor:pointer;font-family:'Rubik',sans-serif;}
+.back:hover{background:rgba(255,255,255,.4);}
+.gh-title{font-family:'Fredoka One',cursive;font-size:19px;flex:1;text-align:center;}
+.gh-sc{background:rgba(255,255,255,.25);border-radius:10px;padding:5px 11px;font-size:13px;font-weight:700;}
+.gprog{height:5px;background:rgba(255,255,255,.3);}
+.gpf{height:100%;background:#FFD93D;transition:width .4s;}
+.gbody{flex:1;padding:16px 14px;overflow-y:auto;background:var(--cream);}
+
+/* ── GAME UI ── */
+.bigchar{font-size:90px;text-align:center;line-height:1.3;margin:10px 0;font-family:'Times New Roman',serif;}
+.q{font-size:16px;font-weight:700;color:var(--dark);text-align:center;margin-bottom:14px;}
+.hint{font-size:12px;color:var(--mid);text-align:center;margin:-8px 0 12px;}
+.opts2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:6px;}
+.opt{padding:13px 7px;border-radius:var(--r);border:2.5px solid #E8ECF0;background:#fff;cursor:pointer;font-size:14px;text-align:center;color:var(--dark);transition:all .15s;font-family:'Times New Roman',serif;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+.opt.txt{font-family:'Rubik',sans-serif;font-size:13.5px;}
+.opt:hover:not(.dis){border-color:#9B59B6;background:#F5F0FF;transform:scale(1.02);}
+.opt.ok{border-color:var(--gn);background:#EAFBF0;color:var(--gn);}
+.opt.no{border-color:var(--rd);background:#FDECEA;color:var(--rd);}
+.opt.dis{pointer-events:none;}
+.fb{border-radius:var(--r);padding:11px 14px;text-align:center;font-size:14px;font-weight:700;margin:11px 0;animation:pop .3s ease;}
+.fb.ok{background:#EAFBF0;color:var(--gn);border:1.5px solid var(--gn);}
+.fb.no{background:#FDECEA;color:var(--rd);border:1.5px solid var(--rd);}
+.nxtbtn{display:block;width:100%;padding:13px;border-radius:var(--r);color:#fff;border:none;cursor:pointer;font-size:14.5px;font-weight:700;font-family:'Rubik',sans-serif;margin-top:11px;transition:all .15s;}
+.nxtbtn:hover{transform:translateY(-2px);}
+.pcdots{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;}
+.pc{width:12px;height:12px;border-radius:50%;background:#E8ECF0;}
+.pc.dn{background:var(--gn);}
+.pc.cur{background:#9B59B6;}
+
+/* ── MEMORY ── */
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:6px;}
+.mcard{aspect-ratio:1;border-radius:var(--r);border:2.5px solid #E8ECF0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Times New Roman',serif;transition:all .18s;}
+.mcard:hover{border-color:#9B59B6;}
+.mcard.fl{background:#F5F0FF;border-color:#9B59B6;color:#9B59B6;}
+.mcard.mt{background:#EAFBF0;border-color:var(--gn);color:var(--gn);pointer-events:none;}
+.mcard.bk{background:linear-gradient(135deg,#9B59B6,#764ba2);color:transparent;}
+.mcard.bk::after{content:"\2605";font-size:20px;color:#FFD93D;}
+
+/* ── BALLOONS ── */
+.balarea{position:relative;height:300px;background:linear-gradient(180deg,#87CEEB,#D0EEFF);border-radius:var(--rl);overflow:hidden;border:2px solid #3498DB;margin-bottom:10px;}
+.balloon{position:absolute;cursor:pointer;transition:transform .1s;user-select:none;}
+.balbody{font-size:44px;display:block;line-height:1;}
+.balchar{position:absolute;top:48%;left:50%;transform:translate(-50%,-60%);font-family:'Times New Roman',serif;font-size:17px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+.balloon:hover{transform:scale(1.1)!important;}
+.bq{background:#fff;border-radius:var(--r);padding:9px 14px;text-align:center;margin-bottom:9px;font-size:14px;font-weight:700;box-shadow:var(--sh);}
+
+/* ── CONNECT ── */
+.carea{display:flex;gap:10px;margin-top:6px;}
+.ccol{flex:1;display:flex;flex-direction:column;gap:6px;}
+.ci{padding:11px 7px;border-radius:var(--r);border:2px solid #E8ECF0;background:#fff;cursor:pointer;text-align:center;font-family:'Times New Roman',serif;font-size:26px;transition:all .15s;}
+.ci.sm{font-family:'Rubik',sans-serif;font-size:12.5px;font-weight:600;}
+.ci:hover:not(.mt){border-color:#9B59B6;background:#F5F0FF;}
+.ci.sl{border-color:#9B59B6;background:#F5F0FF;}
+.ci.mt{border-color:var(--gn);background:#EAFBF0;color:var(--gn);pointer-events:none;}
+.ci.wm{border-color:var(--rd);background:#FDECEA;}
+
+/* ── SORT ── */
+.buckets{display:grid;gap:8px;margin-bottom:11px;}
+.bkt{border-radius:var(--r);border:2px dashed #BDC3C7;padding:8px;min-height:65px;cursor:pointer;transition:all .15s;}
+.bkt:hover{border-color:#9B59B6;background:#F5F0FF;}
+.bkt-lbl{font-size:10.5px;font-weight:700;color:var(--mid);margin-bottom:4px;text-align:center;}
+.bkt-body{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;}
+.bchip{font-family:'Times New Roman',serif;font-size:22px;background:#fff;border-radius:6px;padding:2px 6px;}
+.spool{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin:7px 0;}
+.nchip{width:48px;height:48px;border-radius:var(--r);border:2px solid #E8ECF0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;font-family:'Times New Roman',serif;transition:all .15s;}
+.nchip:hover{border-color:#9B59B6;background:#F5F0FF;transform:scale(1.08);}
+.nchip.sl{border-color:#9B59B6;background:#F5F0FF;}
+.nchip.dn{opacity:.35;pointer-events:none;}
+
+/* ── FILL ── */
+.ftbword{font-family:'Times New Roman',serif;font-size:36px;text-align:center;letter-spacing:5px;margin:14px 0;color:var(--dark);}
+.ftbblank{display:inline-block;border-bottom:3px solid #9B59B6;min-width:40px;text-align:center;color:#9B59B6;}
+.npal{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:9px 0;}
+
+/* ── SPEED ── */
+.sphdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;background:#fff;border-radius:var(--r);padding:9px 13px;box-shadow:var(--sh);}
+.sptmr{font-family:'Fredoka One',cursive;font-size:20px;color:var(--rd);}
+.spsc{font-family:'Fredoka One',cursive;font-size:17px;color:#9B59B6;}
+
+/* ── READING ── */
+.rcard{background:#fff;border-radius:var(--rl);padding:16px;box-shadow:var(--sh);margin-bottom:11px;}
+.rtext{font-family:'Times New Roman',serif;font-size:22px;line-height:2.2;text-align:center;color:var(--dark);}
+.rword{display:inline-block;cursor:pointer;border-radius:5px;padding:1px 4px;transition:all .15s;margin:0 2px;}
+.rword:hover{background:#9B59B6;color:#fff;}
+.rword.ok{background:#EAFBF0;color:var(--gn);}
+.rword.no{background:#FDECEA;color:var(--rd);}
+.tnikud{border-radius:var(--r);padding:7px 14px;text-align:center;margin-bottom:11px;font-size:14px;font-weight:700;color:#fff;}
+
+/* ── WHEEL ── */
+.wheelwrap{display:flex;flex-direction:column;align-items:center;gap:12px;margin:10px 0;}
+.spinbtn{color:#fff;border:none;border-radius:40px;padding:11px 26px;font-size:14.5px;font-weight:700;font-family:'Rubik',sans-serif;cursor:pointer;transition:all .18s;}
+.spinbtn:hover{transform:scale(1.05);}
+.spinbtn:disabled{opacity:.5;pointer-events:none;}
+.wres{background:#fff;border-radius:var(--r);padding:11px 18px;text-align:center;font-size:16px;font-weight:700;color:#9B59B6;box-shadow:var(--sh);min-height:46px;}
+
+/* ── NIKUD INTRO ── */
+.niintro{background:#fff;border-radius:var(--rl);padding:16px;box-shadow:var(--sh);}
+.nigrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:11px;}
+.nicard{border-radius:var(--r);padding:12px;text-align:center;border:2px solid #E8ECF0;}
+.nichar{font-family:'Times New Roman',serif;font-size:46px;}
+.niname{font-size:14px;font-weight:700;color:var(--dark);margin-top:3px;}
+.nisound{font-size:11.5px;color:var(--mid);}
+.niex{font-family:'Times New Roman',serif;font-size:18px;margin-top:4px;}
+
+/* ── SOUND ── */
+.sndbtn{color:#fff;border:none;border-radius:40px;padding:11px 22px;font-size:14px;font-weight:700;font-family:'Rubik',sans-serif;cursor:pointer;display:flex;align-items:center;gap:7px;margin:0 auto 14px;}
+.waves{display:flex;align-items:center;gap:3px;}
+.wave{width:4px;background:#fff;border-radius:3px;animation:wv .8s ease infinite;}
+.wave:nth-child(2){animation-delay:.1s;}.wave:nth-child(3){animation-delay:.2s;}.wave:nth-child(4){animation-delay:.3s;}.wave:nth-child(5){animation-delay:.4s;}
+
+/* ── DOBBLE ── */
+.dob-wrap{flex:1;overflow-y:auto;background:linear-gradient(180deg,#87CEEB,#B8F0D0,#7DC95E);display:flex;flex-direction:column;align-items:center;padding:10px 12px;}
+.dbhdr{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+.dbtitle{font-family:'Fredoka One',cursive;font-size:22px;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,.2);}
+.dbtmr{background:#fff;border-radius:14px;padding:5px 13px;font-family:'Fredoka One',cursive;font-size:16px;color:var(--rd);}
+.dbsc{background:#fff;border-radius:14px;padding:5px 13px;font-family:'Fredoka One',cursive;font-size:14px;color:#9B59B6;}
+.dbcircles{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;width:100%;}
+.dbcirc{width:248px;height:248px;border-radius:50%;background:linear-gradient(135deg,#87CEEB,#E0F7FF);border:5px solid #2E8B57;box-shadow:0 6px 22px rgba(0,0,0,.17);position:relative;overflow:hidden;flex-shrink:0;}
+.dbltr{position:absolute;font-family:'Times New Roman',serif;cursor:pointer;transition:all .14s;user-select:none;line-height:1.3;}
+.dbltr:hover{filter:brightness(1.15);transform:scale(1.18)!important;}
+.dbgrass{position:absolute;bottom:0;left:0;right:0;height:56px;background:linear-gradient(180deg,#7DC95E,#5A9E3A);border-radius:0 0 50% 50%;}
+.dbcloud{position:absolute;top:14px;left:26%;background:#fff;border-radius:15px;width:50px;height:16px;opacity:.82;}
+.dbcloud::before,.dbcloud::after{content:'';position:absolute;background:#fff;border-radius:50%;}
+.dbcloud::before{width:25px;height:25px;top:-12px;left:5px;}
+.dbcloud::after{width:18px;height:18px;top:-8px;right:5px;}
+.dblbl{text-align:center;font-size:12.5px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3);margin-top:6px;}
+.dbinstr{background:rgba(255,255,255,.88);border-radius:var(--r);padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--dark);text-align:center;margin-bottom:9px;width:100%;max-width:540px;}
+.dbpb{width:100%;background:rgba(255,255,255,.42);border-radius:7px;height:7px;margin-bottom:7px;}
+.dbpbf{height:100%;background:#FFD93D;border-radius:7px;transition:width .3s;}
+
+/* ── RESULT OVERLAY ── */
+.res-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#667eea,#764ba2);display:none;align-items:center;justify-content:center;z-index:200;}
+.res-overlay.show{display:flex;}
+.resbox{background:#fff;border-radius:26px;padding:30px 24px;text-align:center;max-width:340px;width:92%;box-shadow:var(--sh2);}
+.resemoji{font-size:54px;margin-bottom:8px;display:block;}
+.restitle{font-family:'Fredoka One',cursive;font-size:26px;color:#9B59B6;margin-bottom:4px;}
+.resscore{font-size:44px;font-weight:700;color:#FF8C42;margin:7px 0;}
+.resstars{font-size:30px;letter-spacing:4px;margin:5px 0;}
+.ressub{color:var(--mid);font-size:12px;margin-bottom:16px;}
+.resbtns{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;}
+.rbtn{padding:10px 18px;border-radius:var(--r);border:none;cursor:pointer;font-size:12.5px;font-weight:700;font-family:'Rubik',sans-serif;transition:all .15s;color:#fff;}
+.rbtn:hover{transform:translateY(-2px);}
+.rbtn.t{background:#F5F0FF;color:#9B59B6;}
+
+@keyframes pop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.07)}100%{transform:scale(1);opacity:1}}
+@keyframes wv{0%{height:6px}50%{height:21px}100%{height:6px}}
+</style>
+</head>
+<body>
+
+<!-- TABS BAR -->
+<div class="tabs-bar" id="tabs-bar">
+  <button class="tab-btn" id="tab-0" onclick="switchTab(0)">
+    <span class="ticon">🔴</span>
+    <span class="tlabel">קמץ ופתח<br><span style="font-family:'Times New Roman',serif;font-size:14px">אָ אַ</span></span>
+  </button>
+  <button class="tab-btn" id="tab-1" onclick="switchTab(1)">
+    <span class="ticon">🟢</span>
+    <span class="tlabel">חיריק<br><span style="font-family:'Times New Roman',serif;font-size:14px">אִ</span></span>
+  </button>
+  <button class="tab-btn" id="tab-2" onclick="switchTab(2)">
+    <span class="ticon">🟠</span>
+    <span class="tlabel">צירה וסגול<br><span style="font-family:'Times New Roman',serif;font-size:14px">אֵ אֶ</span></span>
+  </button>
+  <button class="tab-btn" id="tab-3" onclick="switchTab(3)">
+    <span class="ticon">🔵</span>
+    <span class="tlabel">קיבוץ ושורוק<br><span style="font-family:'Times New Roman',serif;font-size:14px">אֻ אוּ</span></span>
+  </button>
+  <button class="tab-btn" id="tab-4" onclick="switchTab(4)">
+    <span class="ticon">🟡</span>
+    <span class="tlabel">חולם<br><span style="font-family:'Times New Roman',serif;font-size:14px">אֹ</span></span>
+  </button>
+</div>
+
+
+<!-- PANEL 0: קמץ ופתח -->
+<div class="tab-panel" id="panel-0">
+  <div class="home-wrap" id="home-0">
+    <div class="home-top">
+      <div class="tab-hero" style="background:linear-gradient(135deg,#E74C3C,#FF8C42)">
+        <div class="hero-nikud">אָ</div>
+        <h1>קמץ ופתח</h1>
+        <p>צליל אַ — הניקוד הנפוץ ביותר!</p>
+      </div>
+      <div class="nik-chips"><div class="nik-chip" style="background:#FDECEA;color:#E74C3C"><span class="nik-char">אָ</span>קמץ = "אָה"</div><div class="nik-chip" style="background:#FFF0F5;color:#FF6B9D"><span class="nik-char">אַ</span>פתח = "אַ"</div></div>
+      <div class="score-bar">
+        <div class="sb-item"><div class="sb-val" id="sc0" style="color:#E74C3C">0</div><div class="sb-lbl">ניקוד</div></div>
+        <div class="sb-item"><div class="sb-val" id="gp0" style="color:#E74C3C">0</div><div class="sb-lbl">משחקים</div></div>
+        <div class="sb-item"><div class="sb-val" id="st0">☆</div><div class="sb-lbl">כוכבים</div></div>
+      </div>
+    </div>
+    <div class="games-grid" id="grid-0"></div>
+  </div>
+  <div id="game-area-0" style="display:none;flex:1;flex-direction:column;">
+    <div class="ghead" style="background:linear-gradient(135deg,#E74C3C,#FF8C42)">
+      <button class="back" onclick="goHome(0)">← בית</button>
+      <div class="gh-title" id="gtitle-0">משחק</div>
+      <div class="gh-sc" id="gsc-0">0</div>
+    </div>
+    <div class="gprog"><div class="gpf" id="gpf-0" style="width:0%"></div></div>
+    <div class="gbody" id="gbody-0"></div>
+  </div>
+  <div id="dob-area-0" style="display:none;flex:1;flex-direction:column;">
+    <div class="dob-wrap">
+      <div class="dbhdr">
+        <button class="back" onclick="goHome(0)" style="background:rgba(255,255,255,.5);color:#2E8B57;font-weight:700;">← בית</button>
+        <div class="dbtitle">🎯 דאבל!</div>
+        <div style="display:flex;gap:7px;"><div class="dbtmr" id="dbtmr-0">⏱ 60</div><div class="dbsc" id="dbsc-0">✓ 0</div></div>
+      </div>
+      <div class="dbpb"><div class="dbpbf" id="dbpbf-0" style="width:0%"></div></div>
+      <div class="dbinstr" id="dbinstr-0">מצא את הניקוד המשותף!</div>
+      <div class="dbcircles" id="dbcircles-0"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 1: חיריק -->
+<div class="tab-panel" id="panel-1">
+  <div class="home-wrap" id="home-1">
+    <div class="home-top">
+      <div class="tab-hero" style="background:linear-gradient(135deg,#27AE60,#2ECC71)">
+        <div class="hero-nikud">אִ</div>
+        <h1>חיריק</h1>
+        <p>צליל אִי — הניקוד הדק!</p>
+      </div>
+      <div class="nik-chips"><div class="nik-chip" style="background:#EAFBF0;color:#27AE60"><span class="nik-char">אִ</span>חיריק = "אִי"</div></div>
+      <div class="score-bar">
+        <div class="sb-item"><div class="sb-val" id="sc1" style="color:#27AE60">0</div><div class="sb-lbl">ניקוד</div></div>
+        <div class="sb-item"><div class="sb-val" id="gp1" style="color:#27AE60">0</div><div class="sb-lbl">משחקים</div></div>
+        <div class="sb-item"><div class="sb-val" id="st1">☆</div><div class="sb-lbl">כוכבים</div></div>
+      </div>
+    </div>
+    <div class="games-grid" id="grid-1"></div>
+  </div>
+  <div id="game-area-1" style="display:none;flex:1;flex-direction:column;">
+    <div class="ghead" style="background:linear-gradient(135deg,#27AE60,#2ECC71)">
+      <button class="back" onclick="goHome(1)">← בית</button>
+      <div class="gh-title" id="gtitle-1">משחק</div>
+      <div class="gh-sc" id="gsc-1">0</div>
+    </div>
+    <div class="gprog"><div class="gpf" id="gpf-1" style="width:0%"></div></div>
+    <div class="gbody" id="gbody-1"></div>
+  </div>
+  <div id="dob-area-1" style="display:none;flex:1;flex-direction:column;">
+    <div class="dob-wrap">
+      <div class="dbhdr">
+        <button class="back" onclick="goHome(1)" style="background:rgba(255,255,255,.5);color:#2E8B57;font-weight:700;">← בית</button>
+        <div class="dbtitle">🎯 דאבל!</div>
+        <div style="display:flex;gap:7px;"><div class="dbtmr" id="dbtmr-1">⏱ 60</div><div class="dbsc" id="dbsc-1">✓ 0</div></div>
+      </div>
+      <div class="dbpb"><div class="dbpbf" id="dbpbf-1" style="width:0%"></div></div>
+      <div class="dbinstr" id="dbinstr-1">מצא את הניקוד המשותף!</div>
+      <div class="dbcircles" id="dbcircles-1"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 2: צירה וסגול -->
+<div class="tab-panel" id="panel-2">
+  <div class="home-wrap" id="home-2">
+    <div class="home-top">
+      <div class="tab-hero" style="background:linear-gradient(135deg,#FF8C42,#FF6B9D)">
+        <div class="hero-nikud">אֵ</div>
+        <h1>צירה וסגול</h1>
+        <p>צלילי אֵי ואֶ — משפחת E</p>
+      </div>
+      <div class="nik-chips"><div class="nik-chip" style="background:#FFF5E8;color:#FF8C42"><span class="nik-char">אֵ</span>צירה = "אֵי"</div><div class="nik-chip" style="background:#FDF5FF;color:#9B59B6"><span class="nik-char">אֶ</span>סגול = "אֶ"</div></div>
+      <div class="score-bar">
+        <div class="sb-item"><div class="sb-val" id="sc2" style="color:#FF8C42">0</div><div class="sb-lbl">ניקוד</div></div>
+        <div class="sb-item"><div class="sb-val" id="gp2" style="color:#FF8C42">0</div><div class="sb-lbl">משחקים</div></div>
+        <div class="sb-item"><div class="sb-val" id="st2">☆</div><div class="sb-lbl">כוכבים</div></div>
+      </div>
+    </div>
+    <div class="games-grid" id="grid-2"></div>
+  </div>
+  <div id="game-area-2" style="display:none;flex:1;flex-direction:column;">
+    <div class="ghead" style="background:linear-gradient(135deg,#FF8C42,#FF6B9D)">
+      <button class="back" onclick="goHome(2)">← בית</button>
+      <div class="gh-title" id="gtitle-2">משחק</div>
+      <div class="gh-sc" id="gsc-2">0</div>
+    </div>
+    <div class="gprog"><div class="gpf" id="gpf-2" style="width:0%"></div></div>
+    <div class="gbody" id="gbody-2"></div>
+  </div>
+  <div id="dob-area-2" style="display:none;flex:1;flex-direction:column;">
+    <div class="dob-wrap">
+      <div class="dbhdr">
+        <button class="back" onclick="goHome(2)" style="background:rgba(255,255,255,.5);color:#2E8B57;font-weight:700;">← בית</button>
+        <div class="dbtitle">🎯 דאבל!</div>
+        <div style="display:flex;gap:7px;"><div class="dbtmr" id="dbtmr-2">⏱ 60</div><div class="dbsc" id="dbsc-2">✓ 0</div></div>
+      </div>
+      <div class="dbpb"><div class="dbpbf" id="dbpbf-2" style="width:0%"></div></div>
+      <div class="dbinstr" id="dbinstr-2">מצא את הניקוד המשותף!</div>
+      <div class="dbcircles" id="dbcircles-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 3: קיבוץ ושורוק -->
+<div class="tab-panel" id="panel-3">
+  <div class="home-wrap" id="home-3">
+    <div class="home-top">
+      <div class="tab-hero" style="background:linear-gradient(135deg,#3498DB,#1ABC9C)">
+        <div class="hero-nikud">אֻ</div>
+        <h1>קיבוץ ושורוק</h1>
+        <p>צליל אוּ — שני פנים לאותו צליל</p>
+      </div>
+      <div class="nik-chips"><div class="nik-chip" style="background:#E8F4FF;color:#3498DB"><span class="nik-char">אֻ</span>קיבוץ = "אוּ"</div><div class="nik-chip" style="background:#F0FFFC;color:#1ABC9C"><span class="nik-char">אוּ</span>שורוק = "אוּ"</div></div>
+      <div class="score-bar">
+        <div class="sb-item"><div class="sb-val" id="sc3" style="color:#3498DB">0</div><div class="sb-lbl">ניקוד</div></div>
+        <div class="sb-item"><div class="sb-val" id="gp3" style="color:#3498DB">0</div><div class="sb-lbl">משחקים</div></div>
+        <div class="sb-item"><div class="sb-val" id="st3">☆</div><div class="sb-lbl">כוכבים</div></div>
+      </div>
+    </div>
+    <div class="games-grid" id="grid-3"></div>
+  </div>
+  <div id="game-area-3" style="display:none;flex:1;flex-direction:column;">
+    <div class="ghead" style="background:linear-gradient(135deg,#3498DB,#1ABC9C)">
+      <button class="back" onclick="goHome(3)">← בית</button>
+      <div class="gh-title" id="gtitle-3">משחק</div>
+      <div class="gh-sc" id="gsc-3">0</div>
+    </div>
+    <div class="gprog"><div class="gpf" id="gpf-3" style="width:0%"></div></div>
+    <div class="gbody" id="gbody-3"></div>
+  </div>
+  <div id="dob-area-3" style="display:none;flex:1;flex-direction:column;">
+    <div class="dob-wrap">
+      <div class="dbhdr">
+        <button class="back" onclick="goHome(3)" style="background:rgba(255,255,255,.5);color:#2E8B57;font-weight:700;">← בית</button>
+        <div class="dbtitle">🎯 דאבל!</div>
+        <div style="display:flex;gap:7px;"><div class="dbtmr" id="dbtmr-3">⏱ 60</div><div class="dbsc" id="dbsc-3">✓ 0</div></div>
+      </div>
+      <div class="dbpb"><div class="dbpbf" id="dbpbf-3" style="width:0%"></div></div>
+      <div class="dbinstr" id="dbinstr-3">מצא את הניקוד המשותף!</div>
+      <div class="dbcircles" id="dbcircles-3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 4: חולם -->
+<div class="tab-panel" id="panel-4">
+  <div class="home-wrap" id="home-4">
+    <div class="home-top">
+      <div class="tab-hero" style="background:linear-gradient(135deg,#F39C12,#E67E22)">
+        <div class="hero-nikud">אֹ</div>
+        <h1>חולם</h1>
+        <p>צליל אוֹ — הניקוד העגול!</p>
+      </div>
+      <div class="nik-chips"><div class="nik-chip" style="background:#FFFBE8;color:#F39C12"><span class="nik-char">אֹ</span>חולם = "אוֹ"</div></div>
+      <div class="score-bar">
+        <div class="sb-item"><div class="sb-val" id="sc4" style="color:#F39C12">0</div><div class="sb-lbl">ניקוד</div></div>
+        <div class="sb-item"><div class="sb-val" id="gp4" style="color:#F39C12">0</div><div class="sb-lbl">משחקים</div></div>
+        <div class="sb-item"><div class="sb-val" id="st4">☆</div><div class="sb-lbl">כוכבים</div></div>
+      </div>
+    </div>
+    <div class="games-grid" id="grid-4"></div>
+  </div>
+  <div id="game-area-4" style="display:none;flex:1;flex-direction:column;">
+    <div class="ghead" style="background:linear-gradient(135deg,#F39C12,#E67E22)">
+      <button class="back" onclick="goHome(4)">← בית</button>
+      <div class="gh-title" id="gtitle-4">משחק</div>
+      <div class="gh-sc" id="gsc-4">0</div>
+    </div>
+    <div class="gprog"><div class="gpf" id="gpf-4" style="width:0%"></div></div>
+    <div class="gbody" id="gbody-4"></div>
+  </div>
+  <div id="dob-area-4" style="display:none;flex:1;flex-direction:column;">
+    <div class="dob-wrap">
+      <div class="dbhdr">
+        <button class="back" onclick="goHome(4)" style="background:rgba(255,255,255,.5);color:#2E8B57;font-weight:700;">← בית</button>
+        <div class="dbtitle">🎯 דאבל!</div>
+        <div style="display:flex;gap:7px;"><div class="dbtmr" id="dbtmr-4">⏱ 60</div><div class="dbsc" id="dbsc-4">✓ 0</div></div>
+      </div>
+      <div class="dbpb"><div class="dbpbf" id="dbpbf-4" style="width:0%"></div></div>
+      <div class="dbinstr" id="dbinstr-4">מצא את הניקוד המשותף!</div>
+      <div class="dbcircles" id="dbcircles-4"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="res-overlay" id="res-overlay">
+  <div class="resbox">
+    <span class="resemoji" id="resemoji">🎉</span>
+    <div class="restitle" id="restitle">כל הכבוד!</div>
+    <div class="resscore" id="resscore">0</div>
+    <div class="resstars" id="resstars">⭐⭐⭐</div>
+    <div class="ressub" id="ressub">ניקוד כולל: 0</div>
+    <div class="resbtns">
+      <button class="rbtn" id="rbreplay">שחק שוב</button>
+      <button class="rbtn" id="rbnext">הבא →</button>
+      <button class="rbtn t" onclick="closeRes()">× סגור</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════
+const TAB_NK = [
+  [{ch:"\u05d0\u05b8",n:"קמץ",s:"אָה",g:"A",c:"#E74C3C",ex:["\u05d1\u05b8","\u05e9\u05b8","\u05d3\u05b8"]},{ch:"\u05d0\u05b7",n:"פתח",s:"אַ",g:"A",c:"#FF6B9D",ex:["\u05d1\u05b7","\u05de\u05b7","\u05dc\u05b7"]}],
+  [{ch:"\u05d0\u05b4",n:"חיריק",s:"אִי",g:"I",c:"#27AE60",ex:["\u05d1\u05b4","\u05de\u05b4","\u05dc\u05b4"]}],
+  [{ch:"\u05d0\u05b5",n:"צירה",s:"אֵי",g:"E",c:"#FF8C42",ex:["\u05d1\u05b5","\u05e9\u05b5","\u05de\u05b5"]},{ch:"\u05d0\u05b6",n:"סגול",s:"אֶ",g:"E",c:"#9B59B6",ex:["\u05d1\u05b6","\u05e9\u05b6","\u05de\u05b6"]}],
+  [{ch:"\u05d0\u05bb",n:"קיבוץ",s:"אוּ",g:"U",c:"#3498DB",ex:["\u05db\u05bb","\u05e9\u05bb","\u05de\u05bb"]},{ch:"\u05d0\u05d5\u05bc",n:"שורוק",s:"אוּ",g:"U",c:"#1ABC9C",ex:["\u05d1\u05d5\u05bc","\u05e9\u05d5\u05bc","\u05d3\u05d5\u05bc"]}],
+  [{ch:"\u05d0\u05b9",n:"חולם",s:"אוֹ",g:"O",c:"#F39C12",ex:["\u05d1\u05b9","\u05e9\u05b9","\u05de\u05b9"]}]
+];
+
+const TAB_COLORS = [
+  {main:"#E74C3C",grad:"linear-gradient(135deg,#E74C3C,#FF8C42)",btn:"pa"}
+,
+  {main:"#27AE60",grad:"linear-gradient(135deg,#27AE60,#2ECC71)",btn:"pb"}
+,
+  {main:"#FF8C42",grad:"linear-gradient(135deg,#FF8C42,#FF6B9D)",btn:"pc"}
+,
+  {main:"#3498DB",grad:"linear-gradient(135deg,#3498DB,#1ABC9C)",btn:"pd"}
+,
+  {main:"#F39C12",grad:"linear-gradient(135deg,#F39C12,#E67E22)",btn:"pe"}
+];
+
+const MK={קמץ:"\u05b8",פתח:"\u05b7",קיבוץ:"\u05bb",שורוק:"\u05b9\u05d5",חיריק:"\u05b4",צירה:"\u05b5",סגול:"\u05b6",חולם:"\u05b9"};
+const LT=[
+  {l:"\u05d0",n:"אלף"},{l:"\u05d1",n:"בית"},{l:"\u05d2",n:"גימל"},{l:"\u05d3",n:"דלת"},
+  {l:"\u05d4",n:"הא"},{l:"\u05d6",n:"זין"},{l:"\u05d7",n:"חית"},{l:"\u05d8",n:"טית"},
+  {l:"\u05d9",n:"יוד"},{l:"\u05db",n:"כף"},{l:"\u05dc",n:"למד"},{l:"\u05de",n:"מם"},
+  {l:"\u05e0",n:"נון"},{l:"\u05e1",n:"סמך"},{l:"\u05e2",n:"עין"},{l:"\u05e4",n:"פא"},
+  {l:"\u05e6",n:"צדי"},{l:"\u05e7",n:"קוף"},{l:"\u05e8",n:"ריש"},{l:"\u05e9",n:"שין"},{l:"\u05ea",n:"תו"},
+];
+const WI=[
+  {w:"\u05e9\u05b8\u05c1\u05dc\u05d5\u05b9\u05dd",e:"👋",m:"שלום",nk:"חולם"},
+  {w:"\u05d1\u05b7\u05bc\u05d9\u05b4\u05ea",e:"🏠",m:"בית",nk:"פתח"},
+  {w:"\u05de\u05b7\u05d9\u05b4\u05dd",e:"💧",m:"מים",nk:"פתח"},
+  {w:"\u05e9\u05b6\u05c1\u05de\u05b6\u05e9\u05c1",e:"☀️",m:"שמש",nk:"סגול"},
+  {w:"\u05db\u05b6\u05bc\u05dc\u05b6\u05d1",e:"🐕",m:"כלב",nk:"סגול"},
+  {w:"\u05d7\u05b8\u05ea\u05d5\u05bc\u05dc",e:"🐈",m:"חתול",nk:"קמץ"},
+  {w:"\u05e2\u05b5\u05e5",e:"🌳",m:"עץ",nk:"צירה"},
+  {w:"\u05e4\u05b6\u05bc\u05e8\u05b7\u05d7",e:"🌸",m:"פרח",nk:"סגול"},
+  {w:"\u05d3\u05b8\u05d2",e:"🐟",m:"דג",nk:"קמץ"},
+  {w:"\u05d9\u05b6\u05dc\u05b6\u05d3",e:"👦",m:"ילד",nk:"סגול"},
+  {w:"\u05e1\u05b4\u05e4\u05b6\u05bc\u05e8",e:"📚",m:"ספר",nk:"חיריק"},
+  {w:"\u05d0\u05b9\u05e8",e:"💡",m:"אור",nk:"חולם"},
+  {w:"\u05e9\u05b8\u05c1\u05de\u05b7\u05d9\u05b4\u05dd",e:"☁️",m:"שמיים",nk:"קמץ"},
+  {w:"\u05d1\u05b5\u05bc\u05d9\u05e6\u05b8\u05d4",e:"🥚",m:"ביצה",nk:"צירה"},
+  {w:"\u05d0\u05b5\u05e9\u05c1",e:"🔥",m:"אש",nk:"צירה"},
+  {w:"\u05e9\u05d5\u05bc\u05e8",e:"🐂",m:"שור",nk:"שורוק"},
+  {w:"\u05db\u05bb\u05dc\u05bc\u05b8\u05dd",e:"🌍",m:"כולם",nk:"קיבוץ"},
+];
+const QT=[
+  {t:"\u05d4\u05b7\u05e9\u05c1\u05b6\u05bc\u05de\u05b6\u05e9\u05c1 \u05d6\u05b9\u05e8\u05b7\u05d7\u05b7\u05ea. \u05d4\u05b7\u05d9\u05b6\u05bc\u05dc\u05b6\u05d3 \u05e9\u05c1\u05b8\u05de\u05b5\u05d7\u05b7.",q:"מה זורחת?",opts:["הַשֶּׁמֶשׁ","הַיֶּלֶד","הַבַּיִת"],ok:"הַשֶּׁמֶשׁ"},
+  {t:"\u05d4\u05b7\u05db\u05bc\u05b6\u05dc\u05b6\u05d1 \u05e8\u05b8\u05e5. \u05d4\u05b7\u05d7\u05b8\u05ea\u05d5\u05bc\u05dc \u05d9\u05b8\u05e9\u05b5\u05c1\u05df.",q:"מה ישן?",opts:["הַכֶּלֶב","הַחָתוּל","הַיֶּלֶד"],ok:"הַחָתוּל"},
+  {t:"\u05d4\u05b7\u05de\u05bc\u05b7\u05d9\u05b4\u05dd \u05e7\u05b8\u05e8\u05b4\u05d9\u05dd. \u05d4\u05b7\u05ea\u05bc\u05b5\u05d4 \u05d7\u05b7\u05dd.",q:"מה קר?",opts:["הַמַּיִם","הַתֵּה","הַשֶּׁמֶשׁ"],ok:"הַמַּיִם"},
+  {t:"\u05d4\u05b7\u05e4\u05bc\u05b6\u05bc\u05e8\u05b7\u05d7 \u05d9\u05b8\u05e4\u05b6\u05d4. \u05d4\u05b7\u05e2\u05b5\u05e5 \u05d2\u05b8\u05d3\u05d5\u05b9\u05dc.",q:"מה יפה?",opts:["הַפֶּרַח","הָעֵץ","הַבַּיִת"],ok:"הַפֶּרַח"},
+  {t:"\u05d4\u05b7\u05d3\u05bc\u05b8\u05d2 \u05e9\u05b8\u05c1\u05e5. \u05d4\u05b7\u05d9\u05b4\u05dc\u05b8\u05d3\u05b8\u05d4 \u05e7\u05b8\u05e8\u05b0\u05d0\u05b8\u05d4.",q:"מה שץ?",opts:["הַדָּג","הַיַּלְדָּה","הַסֵּפֶר"],ok:"הַדָּג"},
+  {t:"\u05d4\u05b7\u05e1\u05bc\u05b5\u05e4\u05b6\u05e8 \u05db\u05b8\u05d7\u05d5\u05b9\u05dc. \u05d4\u05b7\u05d9\u05b6\u05bc\u05dc\u05b6\u05d3 \u05e7\u05d5\u05b9\u05e8\u05b5\u05d0.",q:"מה כחול?",opts:["הַסֵּפֶר","הַיֶּלֶד","הַבַּיִת"],ok:"הַסֵּפֶר"},
+];
+const BC=["🔴","🟠","🟡","🟢","🔵","🟣","🟤"];
+const GNAMES=["היכרות ניקוד","שמע וזהה","בחר נכון","הפוך קלפים","מלא החסר","פוצץ בלונים","חבר זוגות","מיין ניקוד","קרא ומצא","גלגל המזל","מרוץ מהיר","השלם מילה","קצב הניקוד","מילה ותמונה","קטע קריאה","ספור ניקוד","שחקן ניקוד","השווה ניקוד","אלוף הניקוד"];
+const GICONS=["📚","🔊","🎯","🃏","✏️","🎈","🔗","🗂","📖","🌪","⚡","🧩","🎵","🖼","📝","🔢","🎭","🌈","🏆"];
+const GCOLS=["#E74C3C","#FF6B9D","#27AE60","#3498DB","#FF8C42","#E74C3C","#1ABC9C","#F39C12","#9B59B6","#3498DB","#27AE60","#FF6B9D","#F39C12","#FF8C42","#1ABC9C","#E74C3C","#9B59B6","#27AE60","#F39C12"];
+const NUM_TABS=5;
+
+// per-tab state
+const TS=Array.from({length:NUM_TABS},()=>({sc:0,gp:0,stars:{},gs:{},dbSc:0,dbInt:null,curGame:-1}));
+let curTab=0;
+
+function rnd(a){return a[Math.floor(Math.random()*a.length)];}
+function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;}
+function pick(a,n){return shuf(a).slice(0,n);}
+const $=id=>document.getElementById(id);
+
+function NK(){return TAB_NK[curTab];}
+function TC(){return TAB_COLORS[curTab];}
+function mkC(ltr,nik){return{ltr:ltr.l+(MK[nik.n]||""),letter:ltr.l,letterName:ltr.n,nikudName:nik.n,sound:nik.s,group:nik.g,color:nik.c};}
+function rndC(){return mkC(rnd(LT),rnd(NK()));}
+function rndPool(n){const o=[],u=new Set();let t=0;while(o.length<n&&t<300){const c=rndC();if(!u.has(c.ltr)){u.add(c.ltr);o.push(c);}t++;}return o;}
+function padNK(arr,min){const out=[...arr];while(out.length<min)out.push(...arr);return out;}
+
+// ══ TAB SWITCHING ══
+function switchTab(t){
+  curTab=t;
+  const acls=["active-a","active-b","active-c","active-d","active-e"];
+  document.querySelectorAll(".tab-btn").forEach((b,i)=>{
+    b.classList.toggle("active",i===t);
+    b.style.setProperty("--act",TAB_COLORS[i].main);
+    if(i===t)b.style.borderBottomColor=TAB_COLORS[t].main;
+  });
+  document.querySelectorAll(".tab-panel").forEach((p,i)=>p.classList.toggle("active",i===t));
+  buildGrid(t);updHome(t);
+}
+function buildGrid(t){
+  const el=$("grid-"+t);if(!el||el.dataset.built)return;el.dataset.built="1";
+  const c=TAB_COLORS[t].main;
+  el.innerHTML=GNAMES.map((nm,i)=>`
+    <div class="gc" onclick="SG(${i},${t})" style="border-color:${GCOLS[i]}">
+      <span class="ico">${GICONS[i]}</span>
+      <div class="nm">${nm}</div><div class="lv">שלב ${i+1}</div>
+      <div class="st" id="gst-${t}-${i}">☆☆☆</div>
+    </div>`).join("")+`
+    <div class="gc dobble" onclick="startDobble(${t})" style="border-color:#FFD93D">
+      <div class="dbadge">★</div>
+      <span class="ico">🎯</span><div class="nm" style="color:#B8860B">דאבל!</div>
+      <div class="lv" style="color:#DAA520">מיוחד</div>
+      <div class="st" id="gst-${t}-19">☆☆☆</div>
+    </div>`;
+}
+function updHome(t){
+  const s=TS[t];
+  $("sc"+t).textContent=s.sc;$("gp"+t).textContent=s.gp;
+  const tot=Object.values(s.stars).reduce((a,b)=>a+b,0);
+  $("st"+t).textContent=tot>0?"⭐".repeat(Math.min(tot,5)):"☆";
+  for(let i=0;i<20;i++){const e=$(`gst-${t}-${i}`);if(e&&s.stars[i]!==undefined){const v=s.stars[i];e.textContent=(v>=1?"⭐":"☆")+(v>=2?"⭐":"☆")+(v>=3?"⭐":"☆");}}
+}
+
+// ══ AUDIO ══
+let actx=null;
+function aud(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
+function tone(f,d,t="sine",v=.27){try{const c=aud();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;o.type=t;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.start();o.stop(c.currentTime+d);}catch(e){}}
+function beepOK(){tone(523,.12);setTimeout(()=>tone(659,.12),90);setTimeout(()=>tone(784,.22),180);}
+function beepNo(){tone(220,.26,"sawtooth",.17);}
+function beepClick(){tone(440,.07,"sine",.12);}
+function spk(t){if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(t);u.lang="he-IL";u.rate=.85;u.pitch=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}
+
+// ══ GAME LAUNCHER ══
+const GFNS=[g0,g1,g2,g3,g4,g5,g6,g7,g8,g9,g10,g11,g12,g13,g14,g15,g16,g17,g18];
+function SG(id,t){
+  if(t===undefined)t=curTab;
+  const s=TS[t];if(s.gs.timer)clearInterval(s.gs.timer);
+  s.curGame=id;s.gs={sc:0,step:0,tot:6,ans:false,tab:t};
+  $("gtitle-"+t).textContent=GNAMES[id];$("gsc-"+t).textContent="0";$("gpf-"+t).style.width="0%";
+  $("home-"+t).style.display="none";$("dob-area-"+t).style.display="none";
+  $("game-area-"+t).style.display="flex";
+  GFNS[id]();
+}
+function goHome(t){
+  if(t===undefined)t=curTab;
+  const s=TS[t];if(s.gs.timer)clearInterval(s.gs.timer);if(s.dbInt)clearInterval(s.dbInt);
+  $("game-area-"+t).style.display="none";$("dob-area-"+t).style.display="none";
+  $("home-"+t).style.display="block";updHome(t);
+}
+function addSc(n){const s=TS[curTab].gs;s.sc+=n;TS[curTab].sc+=n;$("gsc-"+curTab).textContent=s.sc;}
+function setSP(s,t){$("gpf-"+curTab).style.width=(s/t*100)+"%";}
+function dots(){const{step,tot}=TS[curTab].gs;return`<div class="pcdots">${Array.from({length:tot},(_,i)=>`<div class="pc${i<step?" dn":i===step?" cur":""}">`+"</div>").join("")}</div>`;}
+function gbody(){return $("gbody-"+curTab);}
+function nxtCls(){return"nxtbtn";}
+
+function mcq(chosen,correct,nxt,pts=20){
+  const gs=TS[curTab].gs;if(gs.ans)return;gs.ans=true;
+  document.querySelectorAll(".opt").forEach(b=>b.classList.add("dis"));
+  const fb=$("fb-"+curTab);
+  if(chosen===correct){document.querySelectorAll(".opt").forEach(b=>{if(b.dataset.v===correct)b.classList.add("ok");});if(fb)fb.innerHTML="<div class=\"fb ok\">✓ נכון! 🌟</div>";addSc(pts);beepOK();}
+  else{document.querySelectorAll(".opt").forEach(b=>{if(b.dataset.v===chosen)b.classList.add("no");if(b.dataset.v===correct)b.classList.add("ok");});if(fb)fb.innerHTML=`<div class="fb no">✗ התשובה: ${correct}</div>`;beepNo();}
+  const nb=document.createElement("button");nb.className=nxtCls();nb.style.background=TC().grad;
+  nb.textContent=gs.step<gs.tot-1?"הבא ←":"סיום 🏆";
+  nb.onclick=()=>{gs.step++;gs.ans=false;if(gs.step>=gs.tot){showRes();return;}nxt();};
+  gbody().appendChild(nb);setSP(gs.step+1,gs.tot);
+}
+
+// ══ GAMES ══
+function g0(){
+  const gs=TS[curTab].gs;const nk=NK();const tab=curTab;
+  if(gs.step<1){
+    gbody().innerHTML=`${dots()}<div class="niintro"><div style="text-align:center;font-size:12px;font-weight:700;margin-bottom:9px;color:${TC().main}">📚 למד ניקוד</div><div class="nigrid">${nk.map(k=>`<div class="nicard" style="border-color:${k.c}40"><div class="nichar" style="color:${k.c}">${k.ch}</div><div class="niname">${k.n}</div><div class="nisound">צליל: ${k.s}</div><div class="niex">${k.ex.join("  ")}</div></div>`).join("")}</div></div><button class="${nxtCls()}" style="margin-top:13px;background:${TC().grad}" onclick="g0nxt()">הבנתי! ←</button>`;
+  }else{
+    const ok=rnd(nk);const pool=padNK(nk,4);const wr=pick(pool.filter(n=>n.n!==ok.n),Math.min(3,pool.filter(n=>n.n!==ok.n).length));
+    // pad wrong options with repeats if needed
+    while(wr.length<3)wr.push(rnd(pool.filter(n=>n.n!==ok.n))||ok);
+    const opts=shuf([ok,...wr.slice(0,3)]);
+    gbody().innerHTML=`${dots()}<p class="q">מה שם הניקוד?</p><div class="bigchar" style="color:${ok.c}">${ok.ch}</div><p class="hint">צליל: ${ok.s}</p><div class="opts2">${opts.map(o=>`<button class="opt txt" data-v="${o.n}" onclick="mcq('${o.n}','${ok.n}',g0)">${o.n}</button>`).join("")}</div><div id="fb-${tab}"></div>`;
+  }setSP(gs.step,gs.tot);
+}
+function g0nxt(){const gs=TS[curTab].gs;gs.step++;gs.ans=false;if(gs.step>=gs.tot){showRes();return;}g0();}
+
+function g1(){
+  const tab=curTab;const nk=NK();const ok=rnd(nk);const pool=padNK(nk,4);
+  const wr=pick(pool.filter(n=>n.n!==ok.n),Math.min(3,pool.filter(n=>n.n!==ok.n).length));
+  while(wr.length<3)wr.push(rnd(pool.filter(n=>n.n!==ok.n))||ok);
+  const opts=shuf([ok,...wr.slice(0,3)]);
+  gbody().innerHTML=`${dots()}<p class="q">האזן ובחר ניקוד</p>
+    <button class="sndbtn" style="background:${TC().grad}" onclick="spk('${ok.s}')"><div class="waves"><div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div></div>לחץ לשמוע 🔊</button>
+    <div class="opts2">${opts.map(o=>`<button class="opt" data-v="${o.n}" style="font-size:36px;color:${o.c}" onclick="mcq('${o.n}','${ok.n}',g1)">${o.ch}</button>`).join("")}</div><div id="fb-${tab}"></div>`;
+  setSP(TS[tab].gs.step,TS[tab].gs.tot);setTimeout(()=>spk(ok.s),380);
+}
+
+function g2(){
+  const tab=curTab;const pool=rndPool(4);const ok=pool[0];const opts=shuf(pool);
+  gbody().innerHTML=`${dots()}<p class="q">מה ניקוד האות?</p><div class="bigchar" style="color:${ok.color}">${ok.ltr}</div><p class="hint">האות: ${ok.letterName}</p><div class="opts2">${opts.map(o=>`<button class="opt txt" data-v="${o.nikudName}" onclick="mcq('${o.nikudName}','${ok.nikudName}',g2)">${o.nikudName}</button>`).join("")}</div><div id="fb-${tab}"></div>`;
+  setSP(TS[tab].gs.step,TS[tab].gs.tot);
+}
+
+function g3(){
+  const gs=TS[curTab].gs;
+  if(!gs.mi){
+    const nk=NK();const pool=padNK(nk,4);const cs=pick(pool,4).map(n=>mkC(rnd(LT),n));
+    gs.cards=shuf([...cs.map((c,i)=>{return{i,k:c.nikudName+i,sh:c.ltr,t:"l",cl:c.color};}),
+      ...cs.map((c,i)=>{return{i,k:c.nikudName+i,sh:c.nikudName,t:"n",cl:c.color};})]);
+    gs.fl=[];gs.mt=[];gs.lk=false;gs.mv=0;gs.mi=true;
+  }renderMem();
+}
+function renderMem(){
+  const gs=TS[curTab].gs;const{cards:C,fl,mt}=gs;const p=mt.length/4*100;
+  gbody().innerHTML=`<p class="q" style="margin-bottom:5px">מצא זוגות — אות ושם ניקוד</p>
+    <div style="text-align:center;font-size:11px;color:var(--mid);margin-bottom:9px">זוגות: ${mt.length}/4 | מהלכים: ${gs.mv}</div>
+    <div class="mgrid">${C.map((c,i)=>{const isF=fl.includes(i),isM=mt.includes(c.k);return`<div class="mcard${isM?" mt":isF?" fl":" bk"}" onclick="mflip(${i})" ${isM||isF?`style="color:${c.cl};border-color:${c.cl}55"`:""}>
+    ${isF||isM?c.sh:""}</div>`;}
+    ).join("")}</div>
+    <div style="background:#fff;border-radius:7px;height:6px;margin-top:12px;overflow:hidden"><div style="height:100%;background:${TC().grad};width:${p}%;transition:width .4s"></div></div>`;
+}
+function mflip(i){
+  const gs=TS[curTab].gs;if(gs.lk||gs.fl.includes(i)||gs.mt.includes(gs.cards[i].k))return;
+  gs.fl.push(i);renderMem();
+  if(gs.fl.length===2){gs.lk=true;gs.mv++;const[a,b]=gs.fl.map(idx=>gs.cards[idx]);
+    if(a.k===b.k&&a.t!==b.t){gs.mt.push(a.k);addSc(25);beepOK();gs.fl=[];gs.lk=false;renderMem();if(gs.mt.length===4)setTimeout(()=>showRes(),700);}
+    else{beepNo();setTimeout(()=>{gs.fl=[];gs.lk=false;renderMem();},880);}
+  }
+}
+
+function g4(){
+  const tab=curTab;const nk=rnd(NK());const lt=rnd(LT);const ok=mkC(lt,nk);
+  const pool=padNK(NK(),6).filter(n=>n.n!==nk.n);const wrNk=pick(pool,Math.min(5,pool.length));
+  TS[tab].gs.fc=nk.n;
+  gbody().innerHTML=`${dots()}<p class="q">הוסף ניקוד לאות</p>
+    <div class="ftbword" id="ftbd-${tab}">${lt.l}<span class="ftbblank" id="ftbb-${tab}">?</span></div>
+    <div class="hint">האות: ${lt.n} — ניקוד: <strong>${nk.n}</strong></div>
+    <div class="npal">${shuf([nk,...wrNk]).map(n=>`<div class="nchip" id="np-${n.n}" onclick="fpick('${n.n}','${ok.ltr}','${lt.l}',${tab})">${n.ch}</div>`).join("")}</div>
+    <div id="fb-${tab}"></div>`;setSP(TS[tab].gs.step,TS[tab].gs.tot);
+}
+function fpick(ch,okLtr,lt,tab){
+  const gs=TS[tab].gs;if(gs.ans)return;gs.ans=true;
+  document.querySelectorAll(".nchip").forEach(c=>c.style.pointerEvents="none");
+  const fb=$(`fb-${tab}`);
+  if(ch===gs.fc){$(`np-${ch}`).style.background="#EAFBF0";$(`np-${ch}`).style.border="2px solid var(--gn)";
+    const b=$(`ftbb-${tab}`),d=$(`ftbd-${tab}`);if(b)b.textContent="";if(d)d.textContent=okLtr;
+    if(fb)fb.innerHTML="<div class=\"fb ok\">✓ מצוין!</div>";addSc(20);beepOK();}
+  else{$(`np-${ch}`).style.background="#FDECEA";$(`np-${gs.fc}`).style.background="#EAFBF0";
+    if(fb)fb.innerHTML=`<div class="fb no">✗ ניקוד: ${gs.fc}</div>`;beepNo();}
+  const nb=document.createElement("button");nb.className=nxtCls();nb.style.background=TAB_COLORS[tab].grad;
+  nb.textContent=gs.step<gs.tot-1?"הבא ←":"סיום";
+  nb.onclick=()=>{gs.step++;gs.ans=false;if(gs.step>=gs.tot){showRes();return;}g4();};
+  gbody().appendChild(nb);
+}
+
+function g5(){
+  const gs=TS[curTab].gs;const tab=curTab;if(!gs.bi){gs.bt=rnd(NK());gs.bi=true;}
+  const tg=gs.bt;const nkPool=TAB_NK.flat().filter(n=>n.n!==tg.n);
+  const wr=pick(nkPool,4);const wrc=wr.map(n=>mkC(rnd(LT),n));const okc=mkC(rnd(LT),tg);
+  const all=shuf([okc,...wrc]);const pos=[];
+  all.forEach(()=>{let p,t=0,ok=false;while(!ok&&t<50){p={x:5+Math.random()*70,y:5+Math.random()*74};ok=pos.every(q=>Math.abs(q.x-p.x)>16||Math.abs(q.y-p.y)>16);t++;}pos.push(p||{x:Math.random()*74,y:Math.random()*78});});
+  gbody().innerHTML=`${dots()}<div class="bq">פוצץ בלון עם ניקוד <strong style="color:${tg.c}">${tg.n}</strong> (${tg.ch})</div>
+    <div class="balarea"><div style="position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(180deg,#7DC95E,#5A9E3A);border-radius:0 0 50% 50%;"></div>
+      ${all.map((c,i)=>`<div class="balloon" id="bal${i}" style="left:${pos[i].x}%;top:${pos[i].y}%;transform:scale(${.85+Math.random()*.4})" onclick="bpop(${i},'${c.nikudName}','${tg.n}',${tab})"><span class="balbody">${BC[i%BC.length]}</span><span class="balchar">${c.ltr}</span></div>`).join("")}
+    </div><div id="fb-${tab}" style="text-align:center;font-size:13px;color:var(--mid)">לחץ על הבלון הנכון!</div>`;setSP(gs.step,gs.tot);
+}
+function bpop(i,ch,ok,tab){
+  const gs=TS[tab].gs;if(gs.ans)return;gs.ans=true;
+  const el=$("bal"+i);const fb=$("fb-"+tab);
+  if(ch===ok){el.style.transition="all .3s";el.style.transform="scale(2)";el.style.opacity="0";if(fb)fb.innerHTML="<div class=\"fb ok\" style=\"display:inline-block\">✓ פוצץ! 🎉</div>";addSc(20);beepOK();}
+  else{el.style.transform="scale(.5)";if(fb)fb.innerHTML="<div class=\"fb no\" style=\"display:inline-block\">✗ לא נכון!</div>";beepNo();}
+  setTimeout(()=>{gs.step++;gs.ans=false;if(gs.step>=gs.tot){showRes();return;}gs.bi=false;g5();},880);
+}
+
+function g6(){
+  const nk=NK();const pool=padNK(nk,4);const its=pick(pool,Math.min(4,pool.length));
+  const gs=TS[curTab].gs;gs.its=its;gs.lsl=null;gs.mt=[];gs.ls=shuf([...its]);gs.rs=shuf([...its]);
+  gbody().innerHTML=`<p class="q">חבר ניקוד לשמו</p><div class="carea"><div class="ccol" id="lc">${gs.ls.map((it,i)=>`<div class="ci" id="L${i}" data-n="${it.n}" onclick="cL(${i})">${it.ch}</div>`).join("")}</div><div class="ccol" id="rc">${gs.rs.map((it,i)=>`<div class="ci sm" id="R${i}" data-n="${it.n}" onclick="cR(${i})">${it.n}</div>`).join("")}</div></div><div id="fb-${curTab}" style="text-align:center;margin-top:9px;font-size:12.5px;color:var(--mid)">התאמות: 0/${its.length}</div>`;
+}
+function cL(i){const gs=TS[curTab].gs;if(gs.mt.includes(i))return;document.querySelectorAll("#lc .ci").forEach(e=>e.classList.remove("sl"));gs.lsl=i;$("L"+i).classList.add("sl");beepClick();}
+function cR(i){
+  const gs=TS[curTab].gs;if(gs.lsl===null||gs.mt.includes("R"+i))return;
+  if(gs.ls[gs.lsl].n===gs.rs[i].n){
+    $("L"+gs.lsl).classList.remove("sl");$("L"+gs.lsl).classList.add("mt");$("R"+i).classList.add("mt");
+    gs.mt.push(gs.lsl);gs.mt.push("R"+i);addSc(25);beepOK();
+    const tot=gs.its.length;$("fb-"+curTab).textContent=`התאמות: ${Math.floor(gs.mt.length/2)}/${tot}`;
+    if(Math.floor(gs.mt.length/2)>=tot)setTimeout(()=>showRes(),600);
+  }else{const e=$("R"+i);e.classList.add("wm");beepNo();setTimeout(()=>e.classList.remove("wm"),700);}
+  gs.lsl=null;document.querySelectorAll("#lc .ci").forEach(e=>e.classList.remove("sl"));
+}
+
+function g7(){
+  const nk=NK();const gs=TS[curTab].gs;
+  const groups=nk.map(n=>{return{l:n.n+" — "+n.s,ns:[n.n],c:n.c};}); 
+  gs.gr=groups;const pool=shuf(padNK(nk,Math.max(8,nk.length*3)).slice(0,8));gs.pool=pool;gs.pl={};gs.sn=null;
+  renderSort();
+}
+function renderSort(){
+  const gs=TS[curTab].gs;const{pool:P,pl,sn,gr}=gs;
+  const nc=Math.min(gr.length,4);
+  gbody().innerHTML=`<p class="q">מיין לפי ניקוד</p>
+    <div class="spool">${P.map((n,i)=>{const dn=Object.keys(pl).map(Number).includes(i);return`<div class="nchip${sn===i?" sl":""}${dn?" dn":""}" onclick="sSelN(${i})">${n.ch}</div>`;}).join("")}</div>
+    <div class="buckets" style="grid-template-columns:${Array(nc).fill("1fr").join(" ")}">${gr.map((g,gi)=>`<div class="bkt" onclick="sPlace(${gi})" style="border-color:${g.c}"><div class="bkt-lbl" style="color:${g.c}">${g.l}</div><div class="bkt-body">${Object.entries(pl).filter(([,v])=>v===gi).map(([k])=>`<div class="bchip">${P[+k].ch}</div>`).join("")}</div></div>`).join("")}</div>
+    <div id="fb-${curTab}"></div><button class="${nxtCls()}" style="background:${TC().grad}" onclick="sCheck()">בדוק ✓</button>`;
+}
+function sSelN(i){const gs=TS[curTab].gs;if(Object.keys(gs.pl).map(Number).includes(i))return;gs.sn=gs.sn===i?null:i;renderSort();}
+function sPlace(gi){const gs=TS[curTab].gs;if(gs.sn===null)return;gs.pl[gs.sn]=gi;gs.sn=null;renderSort();}
+function sCheck(){
+  const gs=TS[curTab].gs;let c=0;const t=Object.keys(gs.pl).length;
+  Object.entries(gs.pl).forEach(([k,v])=>{if(gs.gr[v]&&gs.gr[v].ns.includes(gs.pool[+k].n))c++;});
+  addSc(c*15);const fb=$("fb-"+curTab);
+  if(c===t&&t>0){if(fb)fb.innerHTML="<div class=\"fb ok\">✓ מצוין!</div>";beepOK();}else{if(fb)fb.innerHTML=`<div class="fb no">✗ ${c}/${t}</div>`;beepNo();}
+  setTimeout(()=>showRes(),1300);
+}
+
+function g8(){
+  const gs=TS[curTab].gs;const tab=curTab;const nk=rnd(NK());
+  const sents=["\u05d4\u05b7\u05e9\u05c1\u05b6\u05bc\u05de\u05b6\u05e9\u05c1 \u05d6\u05b9\u05e8\u05b7\u05d7\u05b7\u05ea","\u05d4\u05b7\u05d9\u05b6\u05bc\u05dc\u05b6\u05d3 \u05e9\u05c1\u05b8\u05de\u05b5\u05d7\u05b7","\u05d4\u05b7\u05db\u05bc\u05b6\u05dc\u05b6\u05d1 \u05e8\u05b8\u05e5","\u05d4\u05b7\u05de\u05bc\u05b7\u05d9\u05b4\u05dd \u05e7\u05b8\u05e8\u05b4\u05d9\u05dd","\u05d4\u05b7\u05e4\u05bc\u05b6\u05bc\u05e8\u05b7\u05d7 \u05d9\u05b8\u05e4\u05b6\u05d4","\u05d4\u05b7\u05d3\u05bc\u05b8\u05d2 \u05e9\u05b8\u05c1\u05e5"];
+  const sent=sents[gs.step%sents.length];const ws=sent.split(/\s+/);
+  gs.rt=new Set();gs.rc=new Set();ws.forEach((w,i)=>{if(w.match(/[\u05B0-\u05BD]/))gs.rt.add(i);});
+  gbody().innerHTML=`${dots()}<div class="tnikud" style="background:${TC().grad}">חפש ניקוד: ${nk.n} (${nk.ch})</div><div class="rcard"><div class="rtext">${ws.map((w,i)=>`<span class="rword" id="rw${i}" onclick="rTap(${i})">${w}</span>`).join(" ")}</div></div><div id="fb-${tab}" style="text-align:center;font-size:12.5px;color:var(--mid)">לחץ על מילים עם ניקוד!</div><button class="${nxtCls()}" style="background:${TC().grad}" onclick="rFin(${tab})" style="margin-top:9px">בדוק ←</button>`;setSP(gs.step,gs.tot);
+}
+function rTap(i){const gs=TS[curTab].gs;if(gs.rc.has(i))return;gs.rc.add(i);beepClick();const el=$("rw"+i);if(el)el.classList.add(gs.rt.has(i)?"ok":"no");}
+function rFin(tab){const gs=TS[tab].gs;let p=0;gs.rc.forEach(i=>{if(gs.rt.has(i))p+=15;else p-=5;});p=Math.max(0,p);addSc(p);const fb=$("fb-"+tab);if(fb)fb.innerHTML=p>0?"<div class=\"fb ok\">✓ יפה!</div>":"<div class=\"fb no\">✗ נסה שוב</div>";p>0?beepOK():beepNo();setTimeout(()=>{gs.step++;gs.ans=false;if(gs.step>=gs.tot){showRes();return;}g8();},1150);}
+
+function g9(){
+  const gs=TS[curTab].gs;const tab=curTab;if(!gs.wi){gs.wi=true;gs.wa=0;}
+  const nk=NK();
+  gbody().innerHTML=`<p class="q">סובב הגלגל וזהה ניקוד!</p>
+    <div class="wheelwrap">
+      <div style="position:relative;width:190px;height:190px">
+        <svg viewBox="0 0 200 200" width="190" height="190" id="wsvg-${tab}" style="filter:drop-shadow(0 3px 10px rgba(0,0,0,.17))">
+          ${nk.map((s,i)=>{const sa=360/nk.length;const a1=(i*sa-90)*Math.PI/180,a2=((i+1)*sa-90)*Math.PI/180;const x1=100+85*Math.cos(a1),y1=100+85*Math.sin(a1),x2=100+85*Math.cos(a2),y2=100+85*Math.sin(a2);const mx=100+52*Math.cos((a1+a2)/2),my=100+52*Math.sin((a1+a2)/2);return`<g><path d="M100,100 L${x1},${y1} A85,85 0 0,1 ${x2},${y2}Z" fill="${s.c}"/><text x="${mx}" y="${my}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="${nk.length>2?14:18}" font-family="Times New Roman">${s.ch}</text></g>`;}
+          ).join("")}
+          <circle cx="100" cy="100" r="15" fill="#fff" stroke="#ddd" stroke-width="2"/>
+          <polygon points="100,4 107,16 93,16" fill="#E74C3C"/>
+        </svg>
+      </div>
+      <button class="spinbtn" style="background:${TC().grad}" id="spnbtn-${tab}" onclick="doSpin(${tab})">🌪 סובב!</button>
+      <div class="wres" id="wres-${tab}">לחץ לסובב</div>
+    </div>
+    <div id="wopts-${tab}" style="margin-top:5px"></div><div id="fb-${tab}"></div>`;setSP(gs.step,gs.tot);
+}
+function doSpin(tab){
+  const gs=TS[tab].gs;const btn=$(`spnbtn-${tab}`);btn.disabled=true;
+  const ex=360*4+Math.random()*360;gs.wa+=ex;
+  const svg=$(`wsvg-${tab}`);svg.style.transition="transform 3s cubic-bezier(.17,.67,.12,.99)";svg.style.transform=`rotate(${gs.wa}deg)`;
+  setTimeout(()=>{
+    const nk=TAB_NK[tab];const sa=360/nk.length;const norm=((-gs.wa%360)+360)%360;const idx=Math.floor(norm/sa)%nk.length;const land=nk[(nk.length-1-idx+1)%nk.length];
+    $(`wres-${tab}`).innerHTML=`<span style="font-family:'Times New Roman',serif;font-size:28px;color:${land.c}">${land.ch}</span>`;
+    spk(land.s);
+    const pool=padNK(nk,4);const wr=pick(pool.filter(n=>n.n!==land.n),Math.min(3,pool.filter(n=>n.n!==land.n).length));
+    while(wr.length<3)wr.push(rnd(pool.filter(n=>n.n!==land.n))||land);
+    const opts=shuf([land,...wr.slice(0,3)]);
+    $(`wopts-${tab}`).innerHTML=`<div class="opts2">${opts.map(o=>`<button class="opt txt" data-v="${o.n}" onclick="wAns('${o.n}','${land.n}',${tab})">${o.n}</button>`).join("")}</div>`;
+  },3100);
+}
+function wAns(ch,ok,tab){
+  const gs=TS[tab].gs;if(gs.ans)return;gs.ans=true;
+  document.querySelectorAll(".opt").forEach(b=>{b.classList.add("dis");if(b.dataset.v===ok)b.classList.add("ok");if(b.dataset.v===ch&&ch!==ok)b.classList.add("no");});
+  const fb=$(`fb-${tab}`);
+  if(ch===ok){if(fb)fb.innerHTML="<div class=\"fb ok\">✓ נכון!</div>";addSc(20);beepOK();}else{if(fb)fb.innerHTML=`<div class="fb no">✗ זה ${ok}</div>`;beepNo();}
+  const nb=document.createElement("button");nb.className=nxtCls();nb.style.background=TAB_COLORS[tab].grad;nb.textContent=gs.step<gs.tot-1?"שוב ←":"סיום";
+  nb.onclick=()=>{gs.step++;gs.ans=false;gs.wi=false;if(gs.step>=gs.tot){showRes();return;}g9();};
+  gbody().appendChild(nb);
+}
+
+function g10(){
+  const gs=TS[curTab].gs;const tab=curTab;gs.tl=40;gs.s10=0;
+  gbody().innerHTML=`<div class="sphdr"><span class="sptmr" id="sptmr-${tab}">⏱ 40</span><span class="spsc" id="spsc-${tab}">✓ 0</span></div><p class="q">מה שם הניקוד?</p><div id="spch-${tab}" class="bigchar"></div><div id="spopts-${tab}" class="opts2"></div><div id="spfb-${tab}" style="height:28px;text-align:center;margin-top:5px;font-size:20px;font-weight:700"></div>`;
+  gs.timer=setInterval(()=>{gs.tl--;const t=$(`sptmr-${tab}`);if(t){t.textContent=`⏱ ${gs.tl}`;if(gs.tl<=10)t.style.color="#C0392B";}if(gs.tl<=0){clearInterval(gs.timer);addSc(gs.s10*5);showRes();}},1000);
+  spNext(tab);
+}
+function spNext(tab){const nk=TAB_NK[tab];const ok=rnd(nk);const pool=padNK(nk,4);const wr=pick(pool.filter(n=>n.n!==ok.n),Math.min(3,pool.filter(n=>n.n!==ok.n).length));while(wr.length<3)wr.push(rnd(pool.filter(n=>n.n!==ok.n))||ok);const opts=shuf([ok,...wr.slice(0,3)]);const l=$(`spch-${tab}`),o=$(`spopts-${tab}`);if(!l||!o)return;l.textContent=ok.ch;l.style.color=ok.c;o.innerHTML=opts.map(p=>`<button class="opt txt" onclick="spAns('${p.n}','${ok.n}',this,${tab})">${p.n}</button>`).join("");}
+function spAns(ch,ok,btn,tab){document.querySelectorAll(".opt").forEach(b=>b.classList.add("dis"));const fb=$(`spfb-${tab}`);const gs=TS[tab].gs;if(ch===ok){btn.classList.add("ok");gs.s10++;if(fb){fb.textContent="✓";fb.style.color="#27AE60";}beepOK();const s=$(`spsc-${tab}`);if(s)s.textContent=`✓ ${gs.s10}`;}else{btn.classList.add("no");document.querySelectorAll(".opt").forEach(b=>{if(b.textContent===ok)b.classList.add("ok");});if(fb){fb.textContent="✗";fb.style.color="#E74C3C";}beepNo();}setTimeout(()=>{if(gs.tl>0){document.querySelectorAll(".opt").forEach(b=>b.classList.remove("dis","ok","no"));spNext(tab);}},560);}
+
+function g11(){
+  const tab=curTab;const nkNames=NK().map(n=>n.n);const rel=WI.filter(w=>nkNames.includes(w.nk));
+  const wi=rel.length>0?rnd(rel):rnd(WI);const plain=[...wi.w].filter(c=>/[\u05D0-\u05EA]/.test(c));const okL=plain[0]||"א";
+  const wrL=pick(LT.filter(l=>l.l!==okL),3);const opts=shuf([{l:okL},...wrL]);
+  gbody().innerHTML=`${dots()}<p class="q">השלם את המילה</p><div style="text-align:center;font-size:58px;margin:9px 0">${wi.e}</div><div class="ftbword">${wi.w.replace(okL,"<span class=\"ftbblank\">?</span>")}</div><div class="hint">המילה: ${wi.m} | ניקוד: ${wi.nk}</div><div class="opts2">${opts.map(o=>`<button class="opt" style="font-family:'Times New Roman',serif;font-size:30px" data-v="${o.l}" onclick="mcq('${o.l}','${okL}',g11)">${o.l}</button>`).join("")}</div><div id="fb-${tab}"></div>`;setSP(TS[tab].gs.step,TS[tab].gs.tot);
+}
+
+function g12(){
+  const gs=TS[curTab].gs;const nk=NK();const pool=padNK(nk,4);const seq=pick(pool,Math.min(4,pool.length));
+  gs.seq=seq;gs.si=0;gs.s12=0;
+  gbody().innerHTML=`${dots()}<p class="q">לחץ על הניקוד בסדר!</p><div style="display:flex;gap:9px;justify-content:center;margin:12px 0">${seq.map((n,i)=>`<div style="text-align:center;opacity:${i===0?1:.35};transition:all .2s" id="sq${i}"><div style="font-family:'Times New Roman',serif;font-size:30px;color:${n.c}">${n.ch}</div><div style="font-size:9px;color:var(--mid)">${i+1}</div></div>`).join("")}</div><div class="opts2" style="grid-template-columns:repeat(${seq.length},1fr)">${shuf([...seq]).map(n=>`<button class="opt" style="font-family:'Times New Roman',serif;font-size:30px;color:${n.c}" onclick="rTap12('${n.n}')">${n.ch}</button>`).join("")}</div><div id="fb-${curTab}" style="text-align:center;margin-top:7px;font-size:12.5px;color:var(--mid)">לחץ מספר 1!</div>`;setSP(gs.step,gs.tot);spk(seq.map(n=>n.s).join(" "));
+}
+function rTap12(name){const gs=TS[curTab].gs;const ex=gs.seq[gs.si].n;const fb=$("fb-"+curTab);if(name===ex){const el=$("sq"+gs.si);if(el){el.style.opacity="1";el.style.transform="scale(1.18)";}gs.si++;gs.s12+=10;beepOK();if(gs.si>=gs.seq.length){addSc(gs.s12);if(fb)fb.innerHTML="<div class=\"fb ok\">✓ יפה! 🎵</div>";setTimeout(()=>{gs.step++;gs.ans=false;if(gs.step>=gs.tot){showRes();return;}g12();},880);}else{if(fb)fb.textContent=`לחץ ${gs.si+1}`;const ne=$("sq"+gs.si);if(ne)ne.style.opacity="1";}}else{if(fb)fb.innerHTML="<div class=\"fb no\">✗ שוב!</div>";gs.si=0;gs.seq.forEach((_,i)=>{const e=$("sq"+i);if(e)e.style.opacity=i===0?"1":".35";});beepNo();}}
+
+function g13(){
+  const tab=curTab;const nkNames=NK().map(n=>n.n);const pool=WI.filter(w=>nkNames.includes(w.nk));
+  const src=pool.length>=4?pool:WI;const ok=rnd(src);const wr=pick(src.filter(w=>w.m!==ok.m),3);const opts=shuf([ok,...wr]);
+  gbody().innerHTML=`${dots()}<p class="q">בחר מילה נכונה לתמונה</p><div style="text-align:center;font-size:62px;margin:9px 0">${ok.e}</div><div class="opts2">${opts.map(o=>`<button class="opt" style="font-family:'Times New Roman',serif;font-size:18px" data-v="${o.m}" onclick="mcq('${o.m}','${ok.m}',g13)">${o.w}</button>`).join("")}</div><div id="fb-${tab}"></div>`;setSP(TS[tab].gs.step,TS[tab].gs.tot);
+}
+
+function g14(){const gs=TS[curTab].gs;const p=QT[gs.step%QT.length];gbody().innerHTML=`${dots()}<div class="rcard"><div class="rtext">${p.t}</div></div><p class="q" style="margin-top:11px">${p.q}</p><div class="opts2" style="grid-template-columns:1fr">${p.opts.map(o=>`<button class="opt" style="font-family:'Times New Roman',serif;font-size:20px" data-v="${o}" onclick="mcq('${o}','${p.ok}',g14)">${o}</button>`).join("")}</div><div id="fb-${curTab}"></div>`;setSP(gs.step,gs.tot);}
+
+function g15(){
+  const gs=TS[curTab].gs;const tg=rnd(NK());const sents=["שָׁלוֹם לְכֻלָּם","הַבַּיִת גָּדוֹל","יֶלֶד טוֹב","מַיִם קָרִים","פֶּרַח יָפֶה"];const s=rnd(sents);
+  const mk=MK[tg.n]||"";const cnt=Math.max(1,(s.match(new RegExp(mk,"g"))||[]).length);
+  const opts=[...new Set([cnt,cnt+1,Math.max(0,cnt-1),cnt+2])].slice(0,4);
+  gbody().innerHTML=`${dots()}<p class="q">כמה פעמים מופיע ${tg.n} (${tg.ch})?</p><div class="rcard"><div class="rtext" style="font-size:28px">${s}</div></div><div class="opts2">${shuf(opts).map(n=>`<button class="opt txt" style="font-size:22px;font-weight:700" data-v="${n}" onclick="mcq(${n},${cnt},g15,25)">${n}</button>`).join("")}</div><div id="fb-${curTab}"></div>`;setSP(gs.step,gs.tot);
+}
+
+function g16(){
+  const tab=curTab;const nk=NK();const ok=rnd(nk);const pool=padNK(nk,4);const wr=pick(pool.filter(n=>n.n!==ok.n),Math.min(3,pool.filter(n=>n.n!==ok.n).length));while(wr.length<3)wr.push(rnd(pool.filter(n=>n.n!==ok.n))||ok);const opts=shuf([ok,...wr.slice(0,3)]);
+  gbody().innerHTML=`${dots()}<p class="q">בחר ניקוד לפי הצליל:</p>
+    <div style="background:${TC().grad};border-radius:var(--rl);padding:16px;text-align:center;margin:9px 0;color:#fff">
+      <div style="font-size:11px;opacity:.8;margin-bottom:5px">הצליל:</div>
+      <div style="font-family:'Times New Roman',serif;font-size:42px;font-weight:700">${ok.s}</div>
+      <button class="sndbtn" style="background:rgba(255,255,255,.3);margin:9px auto 0" onclick="spk('${ok.s}')"><div class="waves"><div class="wave"></div><div class="wave"></div><div class="wave"></div></div>שמע 🔊</button>
+    </div>
+    <div class="opts2">${opts.map(o=>`<button class="opt" data-v="${o.n}" style="font-family:'Times New Roman',serif;font-size:36px;color:${o.c}" onclick="mcq('${o.n}','${ok.n}',g16)">${o.ch}</button>`).join("")}</div><div id="fb-${tab}"></div>`;setSP(TS[tab].gs.step,TS[tab].gs.tot);setTimeout(()=>spk(ok.s),300);
+}
+
+function g17(){
+  const tab=curTab;const combo=rndC();const nk=NK();const pool=padNK(nk,4);const ok=rnd(pool);const wr=pick(pool.filter(n=>n.n!==ok.n),Math.min(3,pool.filter(n=>n.n!==ok.n).length));while(wr.length<3)wr.push(rnd(pool.filter(n=>n.n!==ok.n))||ok);const opts=shuf([ok,...wr.slice(0,3)]);
+  gbody().innerHTML=`${dots()}<p class="q">זהה את הניקוד!</p>
+    <div style="background:#fff;border-radius:var(--rl);padding:22px;text-align:center;box-shadow:var(--sh);margin-bottom:12px">
+      <div style="font-family:'Times New Roman',serif;font-size:84px;color:${ok.c};line-height:1.2">${combo.ltr}</div>
+      <div style="font-size:11px;color:var(--mid);margin-top:5px">האות: ${combo.letterName}</div>
+    </div>
+    <div class="opts2">${opts.map(o=>`<button class="opt txt" data-v="${o.n}" onclick="mcq('${o.n}','${combo.nikudName}',g17)">${o.n}</button>`).join("")}</div><div id="fb-${tab}"></div>`;setSP(TS[tab].gs.step,TS[tab].gs.tot);
+}
+
+function g18(){
+  const tab=curTab;const nk=NK();const ok=rnd(nk);const pool=padNK(nk,4);const wr=pick(pool.filter(n=>n.n!==ok.n),Math.min(3,pool.filter(n=>n.n!==ok.n).length));while(wr.length<3)wr.push(rnd(pool.filter(n=>n.n!==ok.n))||ok);const opts=shuf([ok,...wr.slice(0,3)]);
+  const t=rnd(["s","n","c"]);
+  if(t==="s"){gbody().innerHTML=`${dots()}<p class="q">מה הצליל?</p><div class="bigchar" style="color:${ok.c}">${ok.ch}</div><div class="opts2">${opts.map(o=>`<button class="opt txt" data-v="${o.s}" onclick="mcq('${o.s}','${ok.s}',g18,30)">${o.s}</button>`).join("")}</div><div id="fb-${tab}"></div>`;}
+  else if(t==="n"){gbody().innerHTML=`${dots()}<p class="q">מה שם הניקוד?</p><div class="bigchar" style="color:${ok.c}">${ok.ch}</div><div class="opts2">${opts.map(o=>`<button class="opt txt" data-v="${o.n}" onclick="mcq('${o.n}','${ok.n}',g18,30)">${o.n}</button>`).join("")}</div><div id="fb-${tab}"></div>`;}
+  else{const cs=rndPool(4);const okc=cs[0];gbody().innerHTML=`${dots()}<p class="q">מצא ניקוד <strong>${okc.nikudName}</strong></p><div class="opts2">${shuf(cs).map(c=>`<button class="opt" style="font-family:'Times New Roman',serif;font-size:38px;color:${c.color}" data-v="${c.nikudName}" onclick="mcq('${c.nikudName}','${okc.nikudName}',g18,30)">${c.ltr}</button>`).join("")}</div><div id="fb-${tab}"></div>`;}
+  setSP(TS[tab].gs.step,TS[tab].gs.tot);
+}
+
+// ══ RESULT ══
+function showRes(){
+  const tab=curTab;const s=TS[tab];const gs=s.gs;
+  if(gs.timer)clearInterval(gs.timer);s.gp++;
+  const pc=gs.sc/(gs.tot*22)*100;const st=pc>=80?3:pc>=50?2:pc>=20?1:0;
+  s.stars[s.curGame]=Math.max(s.stars[s.curGame]||0,st);
+  const em=st===3?"🏆":st===2?"🎉":st===1?"👍":"💪";
+  const ov=$("res-overlay");ov.classList.add("show");
+  $("resemoji").textContent=em;$("restitle").textContent=st===3?"מושלם!":st===2?"כל הכבוד!":st===1?"יפה!":"נסה שוב!";
+  $("resscore").textContent=gs.sc+" נקודות";$("resstars").textContent="⭐".repeat(st)+"☆".repeat(3-st);
+  $("ressub").textContent="ניקוד לשונית: "+s.sc;
+  const bg=TAB_COLORS[tab].grad;
+  $("rbreplay").style.background=bg;$("rbreplay").onclick=()=>{ov.classList.remove("show");SG(s.curGame,tab);};
+  $("rbnext").style.background=bg;$("rbnext").onclick=()=>{ov.classList.remove("show");SG((s.curGame+1)%19,tab);};
+  updHome(tab);
+}
+function closeRes(){$("res-overlay").classList.remove("show");goHome(curTab);}
+
+// ══ DOBBLE ══
+function buildDB(tab){
+  const nk=TAB_NK[tab];const allNK=TAB_NK.flat();
+  return Array.from({length:14},(_,ci)=>{
+    const shared=nk[ci%nk.length];const others=allNK.filter(n=>n.n!==shared.n);
+    const extra=shuf(others).slice(0,5).map(n=>mkC(rnd(LT),n));
+    return shuf([mkC(rnd(LT),shared),...extra]);
+  });
+}
+const dbCards={},dbCur={},dbOk={},dbTl={},dbSc2={};
+for(let i=0;i<NUM_TABS;i++){dbCards[i]=[];dbCur[i]=0;dbOk[i]=null;dbTl[i]=60;dbSc2[i]=0;}
+
+function startDobble(t){
+  if(t===undefined)t=curTab;if(TS[t].dbInt)clearInterval(TS[t].dbInt);
+  dbCards[t]=buildDB(t);dbCur[t]=0;dbSc2[t]=0;dbTl[t]=60;
+  $("dbsc-"+t).textContent="✓ 0";$("dbtmr-"+t).textContent="⏱ 60";$("dbpbf-"+t).style.width="0%";
+  $("home-"+t).style.display="none";$("game-area-"+t).style.display="none";
+  $("dob-area-"+t).style.display="flex";
+  TS[t].dbInt=setInterval(()=>{
+    dbTl[t]--;const tm=$("dbtmr-"+t);if(tm)tm.textContent=`⏱ ${dbTl[t]}`;const pb=$("dbpbf-"+t);if(pb)pb.style.width=((60-dbTl[t])/60*100)+"%";
+    if(dbTl[t]<=0){clearInterval(TS[t].dbInt);showDBRes(t);}},1000);
+  renderDB(t);
+}
+function renderDB(t){
+  if(dbCur[t]>=dbCards[t].length-1){showDBRes(t);return;}
+  const c1=dbCards[t][dbCur[t]],c2=dbCards[t][dbCur[t]+1];
+  const c1n=new Set(c1.map(c=>c.nikudName));const com=c2.find(c=>c1n.has(c.nikudName));
+  dbOk[t]=com?com.nikudName:null;
+  function circ(items,cid){
+    const pl=[];
+    const html=items.map((c,i)=>{let p,tt=0,ok=false;while(!ok&&tt<60){p={x:10+Math.random()*70,y:8+Math.random()*70,sz:16+Math.random()*25,r:(Math.random()-.5)*36};ok=pl.every(q=>Math.abs(q.x-p.x)>13||Math.abs(q.y-p.y)>13);tt++;}pl.push(p||{x:50,y:50});return`<div class="dbltr" style="left:${p.x}%;top:${p.y}%;font-size:${p.sz}px;color:${c.color};transform:rotate(${p.r}deg)" onclick="dbTap('${c.nikudName}',${t})">${c.ltr}</div>`;}
+    ).join("");
+    return`<div><div class="dbcirc" id="${cid}"><div class="dbgrass"></div><div class="dbcloud"></div>${html}</div><div class="dblbl">${cid.includes("a")?"עיגול א'":"עיגול ב'"}</div></div>`;
+  }
+  $("dbcircles-"+t).innerHTML=circ(c1,"dba-"+t)+circ(c2,"dbb-"+t);
+  $("dbinstr-"+t).textContent=`מצא הניקוד המשותף! (זוג ${dbCur[t]+1})`;
+}
+function dbTap(name,t){
+  if(name===dbOk[t]){
+    dbSc2[t]++;dbCur[t]++;$("dbsc-"+t).textContent=`✓ ${dbSc2[t]}`;beepOK();
+    [$("dba-"+t),$("dbb-"+t)].forEach(e=>{if(e)e.style.border="5px solid #27AE60";});
+    setTimeout(()=>{[$("dba-"+t),$("dbb-"+t)].forEach(e=>{if(e)e.style.border="";});renderDB(t);},440);
+  }else{
+    beepNo();[$("dba-"+t),$("dbb-"+t)].forEach(e=>{if(e)e.style.border="5px solid #E74C3C";});
+    setTimeout(()=>[$("dba-"+t),$("dbb-"+t)].forEach(e=>{if(e)e.style.border="";}),440);
+  }
+}
+function showDBRes(t){
+  clearInterval(TS[t].dbInt);TS[t].gp++;TS[t].sc+=dbSc2[t]*10;
+  TS[t].stars[19]=dbSc2[t]>=8?3:dbSc2[t]>=5?2:dbSc2[t]>=2?1:0;
+  const s=TS[t].stars[19];const em=dbSc2[t]>=8?"🏆":dbSc2[t]>=5?"🎉":dbSc2[t]>=2?"👍":"💪";
+  const ov=$("res-overlay");ov.classList.add("show");
+  $("resemoji").textContent=em;$("restitle").textContent="סיום דאבל!";
+  $("resscore").textContent=dbSc2[t]+" זוגות";$("resstars").textContent="⭐".repeat(s)+"☆".repeat(3-s);
+  $("ressub").textContent=`ניקוד: +${dbSc2[t]*10}`;
+  const bg=TAB_COLORS[t].grad;
+  $("rbreplay").style.background=bg;$("rbreplay").onclick=()=>{ov.classList.remove("show");startDobble(t);};
+  $("rbnext").style.display="none";updHome(t);
+}
+
+// ══ INIT ══
+for(let i=0;i<NUM_TABS;i++){
+  const btn=document.getElementById("tab-"+i);
+  if(btn)btn.style.setProperty("--act",TAB_COLORS[i].main);
+}
+switchTab(0);
+</script>
+</body>
+</html>
